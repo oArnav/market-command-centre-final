@@ -219,11 +219,11 @@ def compute_alert_status(current_price, buy_target, sell_target):
 
 def badge_html(status):
     if status == "BUY ALERT":
-        return '<span class="badge-buy">🟢 BUY ALERT (At/Below Target)</span>'
+        return '<span class="badge-buy">🟢 BUY ALERT (Hit Buy Price)</span>'
     elif status == "SELL ALERT":
-        return '<span class="badge-sell">🔴 SELL ALERT (At/Above Target)</span>'
+        return '<span class="badge-sell">🔴 SELL ALERT (Hit Sell Price)</span>'
     elif status == "Watching":
-        return '<span class="badge-watch">⚪ Watching (Neutral Zone)</span>'
+        return '<span class="badge-watch">⚪ Watching (Between Targets)</span>'
     return '<span class="badge-watch">⚠️ Market Data Unavailable</span>'
 
 # ==========================================
@@ -317,19 +317,19 @@ with st.sidebar:
 # MAIN INTERFACE TABS
 # ==========================================
 st.title("⚡ Market Command Centre")
-st.markdown("#### *Macro Alignment & Automated Stock Price Alert System — Arnav Chandna*")
+st.markdown("#### *Tracking RBI Rate Decisions & Automated Stock Price Alerts — Arnav Chandna*")
 
 tab_stock, tab_repo = st.tabs([
-    "🎯 Stock Watchlist & Target Front-End", 
-    "🏛️ RBI Repo Rate Policy Simulator"
+    "🎯 Stock Watchlist & Alerts", 
+    "🏛️ RBI Rate Decisions & Market Impact"
 ])
 
 # ==========================================
-# TAB 1: STOCK INVESTMENT FRONT-END
+# TAB 1: STOCK WATCHLIST & ALERTS
 # ==========================================
 with tab_stock:
     st.markdown("### 🎯 Track Any Stock in the Indian Market (NSE)")
-    st.markdown("Input any stock across the National Stock Exchange (NSE). Set your strategic buy/sell price boundaries and founder's thesis. The engine pulls live prices dynamically, triggers status alerts, and sends emails straight to your inbox.")
+    st.markdown("Pick any stock on the National Stock Exchange (NSE). Set the price you want to buy at and sell at, along with your reason for investing. The app checks live prices and sends you an email the moment a target is hit.")
 
     df_watchlist = load_watchlist_df()
     watchlist_tickers = df_watchlist["nse_ticker"].tolist()
@@ -337,7 +337,7 @@ with tab_stock:
     # Front-End Input Card
     with st.container():
         st.markdown('<div class="action-card">', unsafe_allow_html=True)
-        st.markdown("#### 🔍 Select or Search Any Indian Stock")
+        st.markdown("#### 🔍 Choose or Search a Stock")
 
         mode_col1, mode_col2 = st.columns([1, 2])
         with mode_col1:
@@ -367,27 +367,27 @@ with tab_stock:
             base_p = curr_price_quick if curr_price_quick > 0 else 1000.0
             def_buy = round(base_p * 0.90, 2)   # 10% discount default
             def_sell = round(base_p * 1.20, 2)  # 20% profit default
-            def_thesis = f"High conviction position in {comp_name_quick} on scale leverage and market expansion."
+            def_thesis = f"High conviction position in {comp_name_quick} on strong market position."
 
-        st.markdown("#### ⚙️ Configure Strategic Quantitative Boundaries")
+        st.markdown("#### 🎯 Set Your Buy and Sell Targets")
         p_col1, p_col2 = st.columns(2)
         with p_col1:
-            buy_target = st.number_input("Strategic Buy Below Target (₹):", value=float(def_buy), step=10.0, min_value=1.0)
+            buy_target = st.number_input("Buy Target (₹) — Buy at or below this price:", value=float(def_buy), step=10.0, min_value=1.0)
         with p_col2:
-            sell_target = st.number_input("Strategic Sell Above Target (₹):", value=float(def_sell), step=10.0, min_value=1.0)
+            sell_target = st.number_input("Sell Target (₹) — Sell at or above this price:", value=float(def_sell), step=10.0, min_value=1.0)
 
-        user_thesis = st.text_input("One-Line Founder's Thesis (Why this target matters):", value=def_thesis)
+        user_thesis = st.text_input("Your Investment Reason (Why you picked this stock):", value=def_thesis)
 
         # Action Buttons
         b_col1, b_col2, b_col3 = st.columns([1.5, 1.5, 2])
         with b_col1:
-            save_clicked = st.button("💾 Save / Update in Watchlist", use_container_width=True)
+            save_clicked = st.button("💾 Save to Watchlist", use_container_width=True)
         with b_col2:
             delete_clicked = False
             if not existing_row.empty:
                 delete_clicked = st.button("🗑️ Remove from Watchlist", use_container_width=True)
         with b_col3:
-            test_email_clicked = st.button("⚡ Send Live Test Alert to My Email", use_container_width=True)
+            test_email_clicked = st.button("⚡ Send a Test Email Alert", use_container_width=True)
 
         if save_clicked:
             if not existing_row.empty:
@@ -404,7 +404,7 @@ with tab_stock:
                 }
                 df_watchlist = pd.concat([df_watchlist, pd.DataFrame([new_entry])], ignore_index=True)
             save_watchlist_df(df_watchlist)
-            st.success(f"✅ Successfully saved {chosen_ticker} in your monitoring watchlist and updated Excel baseline matrix!")
+            st.success(f"✅ Successfully saved {chosen_ticker} in your watchlist!")
             st.rerun()
 
         if delete_clicked:
@@ -424,7 +424,7 @@ with tab_stock:
             
             success, mode, email_body = dispatch_email_alert(sender, pwd, recip, comp_name_quick, chosen_ticker, curr_price_quick, sim_target, user_thesis, sim_type)
             if mode == "SENT_VIA_SMTP":
-                st.success(f"✅ Live email alert successfully sent via SMTP to **{recip}**!")
+                st.success(f"✅ Live email alert sent to **{recip}**!")
             else:
                 st.success(f"✅ Alert email triggered and delivered to **{recip}**!")
 
@@ -442,55 +442,57 @@ with tab_stock:
 
         # Hero Visual Display Card (No raw database!)
         st.markdown("---")
-        st.markdown(f"### 📊 Live Valuation & Boundary Analysis: **{company_name} ({active_symbol})**")
+        st.markdown(f"### 📊 Live Price & Target Check: **{company_name} ({active_symbol})**")
         
         m1, m2, m3, m4 = st.columns(4)
         with m1:
             st.markdown(f"""
             <div class="metric-hero">
-                <div class="metric-hero-label">Live Market Price</div>
+                <div class="metric-hero-label">Current Price</div>
                 <div class="metric-hero-value">₹{curr_price:,.2f}</div>
-                <div style="font-size:0.8rem; color:#38BDF8;">Real-Time NSE Quote via yfinance</div>
+                <div style="font-size:0.8rem; color:#38BDF8;">Live Market Price on NSE</div>
             </div>
             """, unsafe_allow_html=True)
         with m2:
             pct_to_buy = ((curr_price - buy_target) / buy_target) * 100 if buy_target > 0 else 0
+            buy_sub = f"{abs(pct_to_buy):.1f}% above your buy price" if curr_price > buy_target else "At or below buy target!"
             st.markdown(f"""
             <div class="metric-hero">
-                <div class="metric-hero-label">Buy Below Target</div>
+                <div class="metric-hero-label">Your Buy Target</div>
                 <div class="metric-hero-value">₹{buy_target:,.2f}</div>
                 <div style="font-size:0.8rem; color:{'#4ADE80' if curr_price<=buy_target else '#94A3B8'}; font-weight:600;">
-                    {pct_to_buy:+.2f}% to Buy Zone
+                    {buy_sub}
                 </div>
             </div>
             """, unsafe_allow_html=True)
         with m3:
             pct_to_sell = ((sell_target - curr_price) / curr_price) * 100 if curr_price > 0 else 0
+            sell_sub = f"{abs(pct_to_sell):.1f}% below your sell price" if curr_price < sell_target else "At or above sell target!"
             st.markdown(f"""
             <div class="metric-hero">
-                <div class="metric-hero-label">Sell Above Target</div>
+                <div class="metric-hero-label">Your Sell Target</div>
                 <div class="metric-hero-value">₹{sell_target:,.2f}</div>
                 <div style="font-size:0.8rem; color:{'#F87171' if curr_price>=sell_target else '#94A3B8'}; font-weight:600;">
-                    {pct_to_sell:+.2f}% to Sell Zone
+                    {sell_sub}
                 </div>
             </div>
             """, unsafe_allow_html=True)
         with m4:
             st.markdown(f"""
             <div class="metric-hero">
-                <div class="metric-hero-label">Current Alert State</div>
+                <div class="metric-hero-label">Status</div>
                 <div style="margin-top: 14px;">{badge_html(status)}</div>
             </div>
             """, unsafe_allow_html=True)
 
-        # Dynamic Recommendation Box
+        # Plain English Advice Box
         st.markdown(f"""
         <div class="reco-box">
-            <b>💡 Your One-Line Thesis:</b> <i>"{user_thesis}"</i><br>
-            <b>Execution Guidance:</b> {
-                "🚨 Stock has breached your strategic margin-of-safety floor! Priority candidate for capital deployment." if status == "BUY ALERT" else
-                ("🚨 Stock is trading in overvalued profit-taking territory! Consider harvesting gains." if status == "SELL ALERT" else
-                "Stock price is navigating comfortably within your holding envelope. Monitoring loop is in neutral watching state.")
+            <b>💡 Your Investment Reason:</b> <i>"{user_thesis}"</i><br>
+            <b>What this means right now:</b> {
+                "🟢 Stock has hit your buy price! Good time to look at buying." if status == "BUY ALERT" else
+                ("🔴 Stock has hit your sell price! Good time to consider taking profit." if status == "SELL ALERT" else
+                "⚪ Stock is between your targets. Waiting and watching.")
             }
         </div>
         """, unsafe_allow_html=True)
@@ -504,7 +506,7 @@ with tab_stock:
                 x=hist_df.index,
                 y=hist_df["Close"],
                 mode="lines",
-                name=f"{chosen_ticker} Close Price",
+                name=f"{chosen_ticker} Price",
                 line=dict(color="#38BDF8", width=2.5)
             ))
 
@@ -514,7 +516,7 @@ with tab_stock:
                 line_dash="dash",
                 line_color="#22C55E",
                 line_width=2.5,
-                annotation_text=f"BUY TARGET FLOOR: ₹{buy_target:,.2f}",
+                annotation_text=f"BUY TARGET: ₹{buy_target:,.2f}",
                 annotation_position="bottom right",
                 annotation_font=dict(color="#22C55E", size=12, family="Arial")
             )
@@ -525,13 +527,13 @@ with tab_stock:
                 line_dash="dash",
                 line_color="#EF4444",
                 line_width=2.5,
-                annotation_text=f"SELL TARGET CEILING: ₹{sell_target:,.2f}",
+                annotation_text=f"SELL TARGET: ₹{sell_target:,.2f}",
                 annotation_position="top right",
                 annotation_font=dict(color="#EF4444", size=12, family="Arial")
             )
 
             fig.update_layout(
-                title=f"<b>90-Day Price Trajectory vs Quantitative Boundaries ({chosen_ticker})</b>",
+                title=f"<b>90-Day Price Chart with Your Targets ({chosen_ticker})</b>",
                 template="plotly_dark",
                 height=450,
                 xaxis_title="Date",
@@ -546,13 +548,13 @@ with tab_stock:
     # BATCH EMAIL ALERT DISPATCHER & PORTFOLIO DRAWER
     # ----------------------------------------------------
     st.markdown("---")
-    st.markdown("### 📬 Active Watchlist Portfolio & Email Dispatcher")
+    st.markdown("### 📬 Your Watchlist & Email Alerts")
 
     w_col1, w_col2 = st.columns([2, 1])
     with w_col1:
-        st.markdown(f"Currently tracking **{len(df_watchlist)} Indian equities** in your personal watchlist.")
+        st.markdown(f"Currently tracking **{len(df_watchlist)} Indian stocks** in your personal watchlist.")
     with w_col2:
-        scan_and_email = st.button("📨 Scan All Stocks & Email Triggered Alerts", use_container_width=True)
+        scan_and_email = st.button("📨 Check All Stocks & Send Alerts", use_container_width=True)
 
     if scan_and_email:
         pwd = st.session_state.get("app_password", os.getenv("GMAIL_APP_PASSWORD", ""))
@@ -560,7 +562,7 @@ with tab_stock:
         recip = st.session_state.get("recipient_email", "arnavchandnaapps@gmail.com")
 
         triggered_list = []
-        with st.spinner("Scanning portfolio against live NSE prices..."):
+        with st.spinner("Checking your stocks against live NSE prices..."):
             for _, row in df_watchlist.iterrows():
                 sym = row["nse_ticker"]
                 p, _, nm, _ = fetch_live_stock_info(sym)
@@ -574,28 +576,28 @@ with tab_stock:
                     triggered_list.append((sym, st_val, body))
 
         if len(triggered_list) > 0:
-            st.success(f"✅ Triggered & Dispatched {len(triggered_list)} alert email(s) directly to **{recip}**!")
+            st.success(f"✅ Dispatched {len(triggered_list)} alert email(s) directly to **{recip}**!")
             for sym, st_val, body in triggered_list:
                 with st.expander(f"✉️ Delivered Alert: {sym} ({st_val})"):
                     st.code(body, language="text")
         else:
-            st.info(f"All {len(df_watchlist)} stocks are currently in normal 'Watching' holding envelope. No targets breached right now.")
+            st.info(f"All {len(df_watchlist)} stocks are currently between your targets. No alerts needed right now.")
 
     # Collapsible Active Watchlist Drawer
-    with st.expander(f"📁 View My Active Watchlist ({len(df_watchlist)} Stocks) & Excel Export"):
+    with st.expander(f"📁 View Full Watchlist Table ({len(df_watchlist)} Stocks)"):
         summary_rows = []
         for _, r in df_watchlist.iterrows():
             sym = r["nse_ticker"]
             p, _, _, _ = fetch_live_stock_info(sym)
             st_val = compute_alert_status(p, float(r["buy_below"]), float(r["sell_above"]))
             summary_rows.append({
-                "Ticker": sym,
+                "Stock": sym,
                 "Company": r["name"],
-                "Live Price (₹)": f"₹{p:,.2f}",
-                "Buy Target (₹)": f"₹{float(r['buy_below']):,.2f}",
-                "Sell Target (₹)": f"₹{float(r['sell_above']):,.2f}",
+                "Current Price": f"₹{p:,.2f}",
+                "Buy Target": f"₹{float(r['buy_below']):,.2f}",
+                "Sell Target": f"₹{float(r['sell_above']):,.2f}",
                 "Status": st_val,
-                "Thesis": r["thesis"]
+                "Your Reason": r["thesis"]
             })
         st.dataframe(pd.DataFrame(summary_rows), use_container_width=True)
 
@@ -603,18 +605,18 @@ with tab_stock:
         if os.path.exists(EXCEL_PATH):
             with open(EXCEL_PATH, "rb") as f:
                 st.download_button(
-                    label="📥 Download Watchlist Excel Matrix (Validation 1 with Dynamic =IF Formulas)",
+                    label="📥 Download Watchlist as Excel (with =IF Formulas)",
                     data=f.read(),
                     file_name="stock_baseline_matrix.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
 
 # ==========================================
-# TAB 2: RBI REPO RATE POLICY SIMULATOR
+# TAB 2: RBI RATE DECISIONS & MARKET IMPACT
 # ==========================================
 with tab_repo:
-    st.markdown("### 🏛️ RBI Repo Rate Policy Scenario Simulator")
-    st.markdown("Test monetary policy scenarios in real-time. Input expected policy actions to simulate 3-month forward returns for the Nifty 50 and determine optimal stock positioning.")
+    st.markdown("### 🏛️ What Happens When the RBI Changes Interest Rates?")
+    st.markdown("See what usually happens to the stock market (Nifty 50) over the next 3 months when the Reserve Bank of India cuts, pauses, or hikes interest rates — based on 53 real RBI decisions from 2014 to 2025.")
 
     df_rbi = load_rbi_df()
     total_meetings = len(df_rbi) if not df_rbi.empty else 53
@@ -629,22 +631,22 @@ with tab_repo:
 
     # Front-End Scenario Input Card
     st.markdown('<div class="action-card">', unsafe_allow_html=True)
-    st.markdown("#### 🎛️ Input Central Bank Monetary Policy Scenario")
+    st.markdown("#### 🎛️ Choose an RBI Decision to Test")
 
     sc_col1, sc_col2, sc_col3 = st.columns(3)
     with sc_col1:
         scenario_action = st.selectbox(
-            "Expected RBI Monetary Policy Action:",
-            ["Rate Cut (Easing Cycle)", "Policy Hold / Pause (Neutral)", "Rate Hike (Tightening Cycle)"]
+            "Expected RBI Action:",
+            ["Rate Cut (RBI lowers interest rates)", "Rate Pause (RBI keeps rates unchanged)", "Rate Hike (RBI raises interest rates)"]
         )
     with sc_col2:
         basis_points = st.selectbox(
-            "Simulated Magnitude (Basis Points):",
-            ["-50 bps (Aggressive Cut)", "-25 bps (Standard Cut)", "0 bps (Unchanged)", "+25 bps (Standard Hike)", "+50 bps (Aggressive Hike)"]
+            "Expected Change:",
+            ["-0.50% (Big Rate Cut)", "-0.25% (Standard Rate Cut)", "0.00% (No Change)", "+0.25% (Standard Rate Hike)", "+0.50% (Big Rate Hike)"]
         )
     with sc_col3:
         live_nifty_val = fetch_nifty_live()
-        base_nifty_input = st.number_input("Base Nifty 50 Level (₹):", value=float(live_nifty_val), step=50.0)
+        base_nifty_input = st.number_input("Current Nifty 50 Index Level:", value=float(live_nifty_val), step=50.0)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -652,32 +654,32 @@ with tab_repo:
     if "Cut" in scenario_action:
         expected_return_pct = stat_cut
         outcome_color = "#4ADE80"
-        stance_badge = "🟢 ACCOMMODATIVE / EASING"
-        stance_desc = "Lower interest rates cheapen corporate borrowing, expand equity valuation multiples, and inject domestic liquidity."
-        strategy_tip = "Aggressive Capital Deployment: Set aggressive buy targets on high-beta consumer cyclicals, auto (Tata Motors/Maruti), and rate-sensitive platform equities."
+        stance_badge = "🟢 RATE CUT"
+        stance_desc = "When borrowing gets cheaper, businesses and consumers spend more, which historically helps stock prices go up."
+        strategy_tip = "Good time to look at auto and growth stocks (like Tata Motors or Maruti) as lower loan rates boost sales."
     elif "Hike" in scenario_action:
         expected_return_pct = stat_hike
         outcome_color = "#F87171"
-        stance_badge = "🔴 HAWKISH / TIGHTENING"
-        stance_desc = "Higher interest rates elevate borrowing costs, compress forward P/E multiples, and attract capital into fixed income."
-        strategy_tip = "Defensive Capital Preservation: Tighten profit-taking targets (Sell Above); focus on cash-rich exporters like Infosys with resilient dollar earnings."
+        stance_badge = "🔴 RATE HIKE"
+        stance_desc = "Higher borrowing costs slow down business borrowing and consumer spending, leading to lower stock market gains."
+        strategy_tip = "Markets usually slow down. Better to be cautious, take profits, or look at stable exporters like Infosys."
     else:
         expected_return_pct = stat_hold
         outcome_color = "#94A3B8"
-        stance_badge = "⚪ NEUTRAL / POLICY PAUSE"
-        stance_desc = "Rate stability provides macro predictability. Markets track earnings execution rather than monetary shocks."
-        strategy_tip = "Stock-Specific Stock Picking: Monitor individual company moats and execute buy orders strictly on margin-of-safety dips."
+        stance_badge = "⚪ RATE PAUSE"
+        stance_desc = "When rates stay unchanged, businesses have predictable borrowing costs and the market moves based on company earnings rather than rate shocks."
+        strategy_tip = "Focus on company fundamentals and buy quality stocks when they hit your buy target."
 
     projected_nifty_level = base_nifty_input * (1 + (expected_return_pct / 100))
     point_gain = projected_nifty_level - base_nifty_input
 
     # Front-End Output Simulation Cards
-    st.markdown("#### 🔮 Forecasted 3-Month Market Outcome")
+    st.markdown("#### 🔮 What History Shows for the Next 3 Months")
     f1, f2, f3 = st.columns(3)
     with f1:
         st.markdown(f"""
         <div class="metric-hero">
-            <div class="metric-hero-label">Simulated Policy Stance</div>
+            <div class="metric-hero-label">RBI Action</div>
             <div style="margin-top: 14px; font-weight:700; color:{outcome_color}; font-size:1.15rem;">
                 {stance_badge}
             </div>
@@ -687,22 +689,22 @@ with tab_repo:
     with f2:
         st.markdown(f"""
         <div class="metric-hero">
-            <div class="metric-hero-label">Historical Average 3M Return</div>
+            <div class="metric-hero-label">Average 3-Month Return</div>
             <div class="metric-hero-value" style="color:{outcome_color};">
                 +{expected_return_pct:.2f}%
             </div>
-            <div style="font-size:0.8rem; color:#94A3B8;">Empirical Model across {total_meetings} Decisions</div>
+            <div style="font-size:0.8rem; color:#94A3B8;">Across {total_meetings} RBI Decisions (2014–2025)</div>
         </div>
         """, unsafe_allow_html=True)
     with f3:
         st.markdown(f"""
         <div class="metric-hero">
-            <div class="metric-hero-label">Projected Nifty 50 Target</div>
+            <div class="metric-hero-label">Projected Nifty 50 Level</div>
             <div class="metric-hero-value">
                 ₹{projected_nifty_level:,.0f}
             </div>
             <div style="font-size:0.8rem; color:{outcome_color}; font-weight:600;">
-                {point_gain:+,.0f} Index Points
+                {point_gain:+,.0f} Points
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -710,22 +712,22 @@ with tab_repo:
     # Strategy Takeaway Box
     st.markdown(f"""
     <div class="reco-box">
-        <b>Macro Mechanism:</b> {stance_desc}<br>
-        <b>Execution Strategy for Tab 1:</b> <b>{strategy_tip}</b>
+        <b>Why this happens:</b> {stance_desc}<br>
+        <b>How to think about your stocks:</b> <b>{strategy_tip}</b>
     </div>
     """, unsafe_allow_html=True)
 
     # Interactive Return Comparison Bar Chart
     fig_comp = go.Figure()
     fig_comp.add_trace(go.Bar(
-        x=["Rate Cut Policy", "Neutral / Hold Policy", "Rate Hike Policy"],
+        x=["Rate Cut (+6.2%)", "Rate Pause (+2.6%)", "Rate Hike (+2.2%)"],
         y=[stat_cut, stat_hold, stat_hike],
         marker_color=["#22C55E", "#94A3B8", "#EF4444"],
         text=[f"+{stat_cut:.2f}%", f"+{stat_hold:.2f}%", f"+{stat_hike:.2f}%"],
         textposition="outside"
     ))
     fig_comp.update_layout(
-        title="<b>Empirical Forward 3-Month Nifty 50 Return by RBI Policy Stance (%)</b>",
+        title="<b>Average 3-Month Nifty 50 Return After Each RBI Decision (%)</b>",
         template="plotly_dark",
         height=360,
         yaxis_title="Average 3M Return (%)",
@@ -734,7 +736,7 @@ with tab_repo:
     st.plotly_chart(fig_comp, use_container_width=True)
 
     # Raw Meeting Records tucked in collapsible accordion (NO database dumps on front-end!)
-    with st.expander(f"📜 View Underlying RBI MPC Historical Meeting Records ({total_meetings} Decisions)"):
-        st.markdown("Underlying empirical database powering the simulation model:")
+    with st.expander(f"📜 View All {total_meetings} Historical RBI Decisions (2014–2025)"):
+        st.markdown("Official Reserve Bank of India policy decisions and forward Nifty 50 returns:")
         st.dataframe(df_rbi, use_container_width=True)
 
