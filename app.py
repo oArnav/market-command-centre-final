@@ -306,7 +306,6 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### 📌 Developer Information")
     st.markdown("**Student**: Arnav Chandna")
-    st.markdown("**Application Year**: 2026–27")
     st.markdown(f"**Last Sync**: `{datetime.now().strftime('%H:%M:%S IST')}`")
 
     if st.button("🔄 Refresh Live Market Data", use_container_width=True):
